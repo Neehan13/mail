@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Send Email - Flask Mailer{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold text-gray-900">Send Email Campaign</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-md {% if category == 'error' %}bg-red-50 text-red-700{% elif category == 'success' %}bg-green-50 text-green-700{% else %}bg-yellow-50 text-yellow-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form id="emailForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Sender Details</h2>
+            
+            <!-- Sender Email -->
+            <div class="mb-4">
+                <label for="sender_email" class="form-label">Sender Email</label>
+                <input type="email" 
+                       id="sender_email" 
+                       name="sender_email" 
+                       class="input-field"
+                       placeholder="Enter sender email address"
+                       required>
+            </div>
+
+            <!-- Sender Password -->
+            <div class="mb-4">
+                <label for="sender_password" class="form-label">Email Password</label>
+                <input type="password" 
+                       id="sender_password" 
+                       name="sender_password" 
+                       class="input-field"
+                       placeholder="Enter email password"
+                       required>
+                <p class="mt-1 text-sm text-gray-500">Your credentials are used only for sending emails and are not stored.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Email Details</h2>
+            
+            <!-- Recipients Input Method -->
+            <div class="mb-4">
+                <label class="form-label">Recipients Input Method</label>
+                <div class="mt-2 space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" 
+                               name="recipients_method" 
+                               value="manual" 
+                               class="form-radio" 
+                               checked 
+                               onchange="toggleRecipientsInput()">
+                        <span class="ml-2">Manual Input</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" 
+                               name="recipients_method" 
+                               value="file" 
+                               class="form-radio" 
+                               onchange="toggleRecipientsInput()">
+                        <span class="ml-2">TXT File</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Manual Recipients -->
+            <div id="manual-recipients" class="mb-4">
+                <label for="recipients" class="form-label">Recipients</label>
+                <textarea id="recipients" 
+                         name="recipients" 
+                         rows="3" 
+                         class="input-field"
+                         placeholder="Enter email addresses separated by commas"
+                         required></textarea>
+                <p class="mt-1 text-sm text-gray-500">Example: john@example.com, jane@example.com</p>
+            </div>
+
+            <!-- File Recipients -->
+            <div id="file-recipients" class="mb-4 hidden">
+                <label for="recipients_file" class="form-label">Recipients File</label>
+                <input type="file" 
+                       id="recipients_file" 
+                       name="recipients_file" 
+                       class="input-field"
+                       accept=".txt">
+                <p class="mt-1 text-sm text-gray-500">Upload a TXT file with one email address per line</p>
+            </div>
+
+            <!-- Subject -->
+            <div class="mb-4">
+                <label for="subject" class="form-label">Subject</label>
+                <input type="text" 
+                       id="subject" 
+                       name="subject" 
+                       class="input-field"
+                       placeholder="Enter email subject"
+                       required>
+            </div>
+
+            <!-- Body -->
+            <div class="mb-4">
+                <label for="body" class="form-label">Email Body</label>
+                <textarea id="body" 
+                         name="body" 
+                         rows="6" 
+                         class="input-field"
+                         placeholder="Enter email content (HTML supported)"
+                         required></textarea>
+            </div>
+
+            <!-- Attachments -->
+            <div class="mb-4">
+                <label for="attachments" class="form-label">Attachments (Optional)</label>
+                <input type="file" 
+                       id="attachments" 
+                       name="attachments" 
+                       class="input-field"
+                       multiple>
+                <p class="mt-1 text-sm text-gray-500">You can select multiple files</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Send Email
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleRecipientsInput() {
+    const manualInput = document.getElementById('manual-recipients');
+    const fileInput = document.getElementById('file-recipients');
+    const recipientsTextarea = document.getElementById('recipients');
+    const recipientsFile = document.getElementById('recipients_file');
+    
+    if (document.querySelector('input[name="recipients_method"]:checked').value === 'manual') {
+        manualInput.classList.remove('hidden');
+        fileInput.classList.add('hidden');
+        recipientsTextarea.required = true;
+        recipientsFile.required = false;
+    } else {
+        manualInput.classList.add('hidden');
+        fileInput.classList.remove('hidden');
+        recipientsTextarea.required = false;
+        recipientsFile.required = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleRecipientsInput();
+});
+</script>
+{% endblock %}

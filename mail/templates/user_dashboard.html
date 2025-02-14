@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Flask Mailer{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold text-gray-900">User Dashboard</h1>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Campaigns</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_campaigns }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Recipients</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_recipients }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Sent</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_sent }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Opens</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_opens }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Average Open Rate</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ "%.1f"|format(stats.avg_open_rate) }}%</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex space-x-4">
+        <a href="{{ url_for('send_email') }}" class="btn-primary">
+            Send New Campaign
+        </a>
+        <a href="{{ url_for('dashboard.index') }}" class="btn-secondary">
+            View All Campaigns
+        </a>
+    </div>
+</div>
+{% endblock %}

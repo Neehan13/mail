@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flask Mailer{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#E6A912',
+                        'primary-light': '#FFD24D',
+                        'primary-dark': '#B3840E',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn-primary {
+                @apply bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition-all duration-300;
+            }
+            .card {
+                @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300;
+            }
+            .input-field {
+                @apply mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:ring-1 focus:ring-primary focus:ring-opacity-50;
+            }
+            .form-label {
+                @apply block text-sm font-medium text-gray-700;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    {% if session.user_id %}
+    <nav class="bg-primary shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-white text-xl font-bold">Beenet Mailer</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        {% if session.is_admin %}
+                        <a href="{{ url_for('admin_dashboard') }}" 
+                           class="text-white hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                            Admin Dashboard
+                        </a>
+                        <a href="{{ url_for('manage_users') }}"
+                           class="text-white hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                            Manage Users
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('dashboard.index') }}"
+                           class="text-white hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                            Dashboard
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('send_email') }}"
+                           class="text-white hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                            Send Email
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-white mr-4">{{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}"
+                       class="text-white hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50 w-96" id="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message rounded-md p-4 mb-4 {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif category == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-yellow-50 text-yellow-700 border border-yellow-200{% endif %} flex items-center justify-between shadow-lg">
+                        <div class="flex items-center">
+                            {% if category == 'error' %}
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                            {% elif category == 'success' %}
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                            <span>{{ message }}</span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-sm font-medium ml-3 hover:text-opacity-75">
+                            ×
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const flashMessages = document.querySelectorAll('.flash-message');
+                    flashMessages.forEach(function(message) {
+                        // Don't auto-dismiss error messages
+                        if (!message.classList.contains('bg-red-50')) {
+                            setTimeout(function() {
+                                message.style.opacity = '0';
+                                message.style.transition = 'opacity 0.5s ease-out';
+                                setTimeout(function() {
+                                    message.remove();
+                                }, 500);
+                            }, 5000);
+                        }
+                    });
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

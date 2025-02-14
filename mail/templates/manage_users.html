@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Flask Mailer{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Create User Form -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-6">Create New User</h2>
+        <form method="POST" class="space-y-4">
+            <div>
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" required class="input-field">
+            </div>
+            <div>
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" required class="input-field">
+            </div>
+            <div>
+                <label for="admin_password" class="form-label">Your Admin Password</label>
+                <input type="password" id="admin_password" name="admin_password" required class="input-field">
+            </div>
+            <button type="submit" class="btn-primary">Create User</button>
+        </form>
+    </div>
+
+    <!-- Delete User Form -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-6">Delete User</h2>
+        <form method="POST" class="space-y-4" onsubmit="event.preventDefault(); submitDelete(this);">
+            <div>
+                <label for="delete_username" class="form-label">Username to Delete</label>
+                <input type="text" id="delete_username" name="username" required class="input-field">
+            </div>
+            <div>
+                <label for="delete_admin_password" class="form-label">Your Admin Password</label>
+                <input type="password" id="delete_admin_password" name="admin_password" required class="input-field">
+            </div>
+            <button type="submit" class="btn-secondary">Delete User</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function submitDelete(form) {
+        if (!confirm('Are you sure you want to delete this user?')) {
+            return;
+        }
+        
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'DELETE',
+                body: formData
+            });
+            
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to delete user');
+        }
+    }
+</script>
+{% endblock %}

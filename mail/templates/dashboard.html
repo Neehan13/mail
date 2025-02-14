@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Flask Mailer{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold text-gray-900">Email Campaign Dashboard</h1>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Campaigns</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_campaigns }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Recipients</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_recipients }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Sent</h3>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_sent }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Opens</h3>
+            <p id="total-opens" class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.total_opens }}</p>
+        </div>
+        <div class="card bg-white p-4">
+            <h3 class="text-sm font-medium text-gray-500">Average Open Rate</h3>
+            <p id="avg-open-rate" class="mt-1 text-2xl font-semibold text-gray-900">{{ "%.1f"|format(stats.avg_open_rate) }}%</p>
+        </div>
+    </div>
+
+    <!-- Campaign Stats Table -->
+    <div class="card bg-white">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800">Campaign Performance</h2>
+            <div class="flex space-x-2">
+                <input type="text" 
+                       id="campaign-search" 
+                       class="input-field" 
+                       placeholder="Search campaigns..."
+                       onkeyup="filterTable('campaign-table', this.value)">
+                <button onclick="resetFilters('campaign-table')"
+                        class="btn-secondary">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="campaign-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 0)">
+                            Campaign ID
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 1)">
+                            Sender Email
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 2)">
+                            Recipients
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 3)">
+                            Total Sent
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 4)">
+                            Total Opens
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 5)">
+                            Open Rate
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 6)">
+                            First Open
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('campaign-table', 7)">
+                            Last Open
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for campaign in campaigns %}
+                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="showCampaignDetails('{{ campaign.id }}')">
+                        <td class="table-cell">{{ campaign.id }}</td>
+                        <td class="table-cell">{{ campaign.sender_email }}</td>
+                        <td class="table-cell">{{ campaign.recipients }}</td>
+                        <td class="table-cell">{{ campaign.total_sent }}</td>
+                        <td class="table-cell">{{ campaign.total_opens }}</td>
+                        <td class="table-cell">{{ "%.1f"|format(campaign.open_rate) }}%</td>
+                        <td class="table-cell">{{ campaign.first_open }}</td>
+                        <td class="table-cell">{{ campaign.last_open }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                            No campaigns found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recipient Stats Table -->
+    <div id="recipient-details" class="card bg-white {% if not recipients %}hidden{% endif %}">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800">Recipient Details</h2>
+            <div class="flex space-x-2">
+                <input type="text" 
+                       id="recipient-search" 
+                       class="input-field" 
+                       placeholder="Search recipients..."
+                       onkeyup="filterTable('recipient-table', this.value)">
+                <button onclick="resetFilters('recipient-table')"
+                        class="btn-secondary">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="recipient-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 0)">
+                            Recipient Email
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 1)">
+                            Opens
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 2)">
+                            First Open
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 3)">
+                            Last Open
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 4)">
+                            Device Info
+                        </th>
+                        <th scope="col" class="table-header sortable" onclick="sortTable('recipient-table', 5)">
+                            Location
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for recipient in recipients %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="table-cell">{{ recipient.email }}</td>
+                        <td class="table-cell">{{ recipient.opens }}</td>
+                        <td class="table-cell">{{ recipient.first_open }}</td>
+                        <td class="table-cell">{{ recipient.last_open }}</td>
+                        <td class="table-cell">{{ recipient.device_info or 'N/A' }}</td>
+                        <td class="table-cell">{{ recipient.location or 'N/A' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            Select a campaign to view recipient details
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-header {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer;
+}
+.table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+.sortable:hover {
+    @apply bg-gray-100;
+}
+.sortable::after {
+    content: "↕";
+    @apply ml-1 text-gray-400;
+}
+.sort-asc::after {
+    content: "↑";
+    @apply text-primary;
+}
+.sort-desc::after {
+    content: "↓";
+    @apply text-primary;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io();
+
+// Real-time updates
+socket.on('campaign_update', (data) => {
+    // Update dashboard metrics
+    document.getElementById('total-opens').textContent = data.total_opens;
+    document.getElementById('avg-open-rate').textContent = `${data.avg_open_rate}%`;
+});
+
+function showCampaignDetails(campaignId) {
+    // Show recipient details section
+    document.getElementById('recipient-details').classList.remove('hidden');
+    
+    // Show loading state
+    const tbody = document.querySelector('#recipient-table tbody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="px-6 py-4 text-center">
+                <div class="flex justify-center items-center space-x-2">
+                    <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Loading recipient details...</span>
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    // Fetch and update recipient data for the selected campaign
+    fetch(`/api/campaign/${campaignId}/recipients`)
+        .then(response => response.json())
+        .then(data => {
+            tbody.innerHTML = data.recipients.length ? data.recipients.map(r => `
+                <tr class="hover:bg-gray-50">
+                    <td class="table-cell">${r.email}</td>
+                    <td class="table-cell">${r.opens}</td>
+                    <td class="table-cell">${r.first_open}</td>
+                    <td class="table-cell">${r.last_open}</td>
+                    <td class="table-cell">${r.device_info || 'N/A'}</td>
+                    <td class="table-cell">${r.location || 'N/A'}</td>
+                </tr>
+            `).join('') : `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        No recipient data available for this campaign
+                    </td>
+                </tr>
+            `;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                        Error loading recipient details. Please try again.
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+function filterTable(tableId, query) {
+    const table = document.getElementById(tableId);
+    const rows = table.getElementsByTagName('tr');
+    const searchTerms = query.toLowerCase().split(' ');
+    
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const text = row.textContent.toLowerCase();
+        const matchesAll = searchTerms.every(term => text.includes(term));
+        row.style.display = matchesAll ? '' : 'none';
+    }
+}
+
+function resetFilters(tableId) {
+    const table = document.getElementById(tableId);
+    const rows = table.getElementsByTagName('tr');
+    const searchInput = document.getElementById(tableId === 'campaign-table' ? 'campaign-search' : 'recipient-search');
+    
+    searchInput.value = '';
+    for (let i = 1; i < rows.length; i++) {
+        rows[i].style.display = '';
+    }
+}
+
+function sortTable(tableId, columnIndex) {
+    const table = document.getElementById(tableId);
+    const headers = table.getElementsByTagName('th');
+    const header = headers[columnIndex];
+    const isAsc = !header.classList.contains('sort-asc');
+    
+    // Reset all headers
+    for (let h of headers) {
+        h.classList.remove('sort-asc', 'sort-desc');
+    }
+    
+    // Set new sort direction
+    header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+    
+    const rows = Array.from(table.getElementsByTagName('tr')).slice(1);
+    const tbody = table.getElementsByTagName('tbody')[0];
+    
+    rows.sort((a, b) => {
+        const aValue = a.getElementsByTagName('td')[columnIndex].textContent;
+        const bValue = b.getElementsByTagName('td')[columnIndex].textContent;
+        
+        // Handle numeric values
+        if (!isNaN(aValue) && !isNaN(bValue)) {
+            return isAsc ? aValue - bValue : bValue - aValue;
+        }
+        
+        // Handle percentage values
+        if (aValue.endsWith('%') && bValue.endsWith('%')) {
+            const aNum = parseFloat(aValue);
+            const bNum = parseFloat(bValue);
+            return isAsc ? aNum - bNum : bNum - aNum;
+        }
+        
+        // Handle dates
+        const aDate = new Date(aValue);
+        const bDate = new Date(bValue);
+        if (!isNaN(aDate) && !isNaN(bDate)) {
+            return isAsc ? aDate - bDate : bDate - aDate;
+        }
+        
+        // Default string comparison
+        return isAsc ? 
+            aValue.localeCompare(bValue) : 
+            bValue.localeCompare(aValue);
+    });
+    
+    // Reorder rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+{% endblock %} 
